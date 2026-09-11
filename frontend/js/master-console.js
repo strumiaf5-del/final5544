@@ -20,24 +20,25 @@ const refs = {
 
 const _mirrored = new WeakSet();
 
-function mirror(srcId, dstId) {
+function mirror(srcId, dstId, { toControl = v => v, toSource = v => v } = {}) {
   const src = cachedEl(srcId), dst = cachedEl(dstId);
   if (!src || !dst) return;
   if (_mirrored.has(src) || _mirrored.has(dst)) return;
   _mirrored.add(src); _mirrored.add(dst);
-  dst.value = src.value;
+  dst.value = toControl(src.value);
   const event = dst.tagName === 'SELECT' || dst.type === 'checkbox' ? 'change' : 'input';
   dst.addEventListener(event, () => {
-    src.value = dst.value;
+    src.value = toSource(dst.value);
     src.dispatchEvent(new Event(event, { bubbles: true }));
     updateReadouts(); updateStageCards();
   });
-  src.addEventListener('input', () => { dst.value = src.value; updateReadouts(); });
-  src.addEventListener('change', () => { dst.value = src.value; updateReadouts(); updateStageCards(); });
+  src.addEventListener('input', () => { dst.value = toControl(src.value); updateReadouts(); });
+  src.addEventListener('change', () => { dst.value = toControl(src.value); updateReadouts(); updateStageCards(); });
 }
 
 export function formatDb(v) { return `${v >= 0 ? '+' : ''}${Number(v).toFixed(1)} dB`; }
 export function ceilingDb(v) { return 20 * Math.log10(Math.max(0.01, Number(v))); }
+export function ceilingAmplitude(db) { return Math.pow(10, Number(db) / 20); }
 
 export function updateReadouts() {
   const input = Number(cachedEl('s-ingain')?.value ?? 0);
@@ -198,7 +199,8 @@ let wired = false;
 export function wire() {
   if (wired) return;
   wired = true;
-  mirror(...refs.input); mirror(...refs.compThreshold); mirror(...refs.compRatio); mirror(...refs.stereo); mirror(...refs.limiter);
+  mirror(...refs.input); mirror(...refs.compThreshold); mirror(...refs.compRatio); mirror(...refs.stereo);
+  mirror(...refs.limiter, { toControl: ceilingDb, toSource: ceilingAmplitude });
   cachedEl('consoleABMaster')?.addEventListener('click', () => setAB('master'));
   cachedEl('consoleABOriginal')?.addEventListener('click', () => setAB('original'));
   cachedEl('consoleABToggle')?.addEventListener('click', toggleAB);
