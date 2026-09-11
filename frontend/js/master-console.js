@@ -175,7 +175,23 @@ export function syncChainMeters(metrics) {
 
 export function getChainOverrides() {
   const bypass = studio.getBypassState();
-  return { comp_bypass: !!bypass.comp, stereo_bypass: !!bypass.stereo, limiter_bypass: !!bypass.limiter };
+  const bypassed = new Set(studio.getBypassedPlugins());
+  return {
+    comp_bypass: !!bypass.comp,
+    stereo_bypass: !!bypass.stereo,
+    limiter_bypass: !!bypass.limiter,
+    eq_bypass: bypassed.has('eq'),
+    dyneq_bypass: bypassed.has('dynamic_eq'),
+    mb_bypass: bypassed.has('multiband'),
+    transient_bypass: bypassed.has('transient'),
+    glue_bypass: bypassed.has('glue'),
+    mscomp_bypass: bypassed.has('ms_comp'),
+    saturation_bypass: bypassed.has('saturation'),
+    mb_stereo_bypass: bypassed.has('mb_stereo'),
+    clipper_bypass: bypassed.has('clipper'),
+    active_dsp: studio.getActiveChain().join(','),
+    bypassed_dsp: [...bypassed].join(','),
+  };
 }
 
 let wired = false;

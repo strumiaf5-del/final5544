@@ -2,11 +2,16 @@
 import { apiFetch, apiBase, downloadAuthenticated } from './api.js';
 import { collectParams, buildQueryString } from './params.js';
 import * as state from './state.js';
+import { getChainOverrides } from './master-console.js';
+
+function collectEffectiveParams(overrides = null) {
+  return { ...collectParams(), ...getChainOverrides(), ...(overrides || {}) };
+}
 
 export async function submitJob(file, overrides = null) {
   const fd = new FormData();
   fd.append('file', file);
-  const params = overrides || collectParams();
+  const params = collectEffectiveParams(overrides);
   const qs = buildQueryString(params);
   const res = await apiFetch(`${apiBase()}/master?${qs}`, { method: 'POST', body: fd });
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
@@ -18,7 +23,7 @@ export async function submitJob(file, overrides = null) {
 export async function submitSync(file, overrides = null) {
   const fd = new FormData();
   fd.append('file', file);
-  const params = overrides || collectParams();
+  const params = collectEffectiveParams(overrides);
   const qs = buildQueryString(params);
   const res = await apiFetch(`${apiBase()}/master/sync?${qs}`, { method: 'POST', body: fd });
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);

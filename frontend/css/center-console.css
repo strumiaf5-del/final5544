@@ -194,6 +194,11 @@
   white-space: nowrap;
 }
 #preview-toggle-wrap input { accent-color: var(--accent); }
+.preview-render-status { width: 138px; }
+.preview-render-label { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 3px; color: var(--text-muted); font-size: 9px; text-transform: none; letter-spacing: 0; }
+.preview-render-label strong { color: var(--accent); font-family: var(--mono); }
+.preview-render-track { height: 4px; overflow: hidden; border-radius: 3px; background: var(--surface3); }
+.preview-render-fill { width: 0; height: 100%; border-radius: inherit; background: var(--accent); box-shadow: 0 0 8px var(--glow-color); transition: width .2s ease; }
 #previewAudioWrap { display: none; }
 .playback-inline {
   display: flex;
