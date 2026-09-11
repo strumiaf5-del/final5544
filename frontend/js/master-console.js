@@ -49,10 +49,10 @@ export function updateReadouts() {
   if (cachedEl('consoleInputReadout')) cachedEl('consoleInputReadout').textContent = formatDb(input);
   if (cachedEl('consoleCompReadout')) cachedEl('consoleCompReadout').textContent = `${ct.toFixed(1)} dB · ${cr.toFixed(1)}:1`;
   if (cachedEl('consoleStereoReadout')) cachedEl('consoleStereoReadout').textContent = `${Math.round(sw * 100)}%`;
-  if (cachedEl('consoleLimiterControlReadout')) cachedEl('consoleLimiterControlReadout').textContent = `${ceilingDb(ceil).toFixed(1)} dB`;
+  if (cachedEl('consoleLimiterControlReadout')) cachedEl('consoleLimiterControlReadout').textContent = `${ceil.toFixed(1)} dB`;
   if (cachedEl('consoleInputGr')) cachedEl('consoleInputGr').textContent = formatDb(input);
   if (cachedEl('consoleStereoGr')) cachedEl('consoleStereoGr').textContent = `WIDTH ${Math.round(sw * 100)}%`;
-  if (cachedEl('consoleLimiterReadout')) cachedEl('consoleLimiterReadout').textContent = `CEILING ${ceilingDb(ceil).toFixed(1)}`;
+  if (cachedEl('consoleLimiterReadout')) cachedEl('consoleLimiterReadout').textContent = `CEILING ${ceil.toFixed(1)}`;
   if (cachedEl('consoleCompGr')) cachedEl('consoleCompGr').textContent = `GR 0.0 dB`;
 }
 
@@ -200,7 +200,7 @@ export function wire() {
   if (wired) return;
   wired = true;
   mirror(...refs.input); mirror(...refs.compThreshold); mirror(...refs.compRatio); mirror(...refs.stereo);
-  mirror(...refs.limiter, { toControl: ceilingDb, toSource: ceilingAmplitude });
+  mirror(...refs.limiter);
   cachedEl('consoleABMaster')?.addEventListener('click', () => setAB('master'));
   cachedEl('consoleABOriginal')?.addEventListener('click', () => setAB('original'));
   cachedEl('consoleABToggle')?.addEventListener('click', toggleAB);
