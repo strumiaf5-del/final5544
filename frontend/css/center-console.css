@@ -8,6 +8,7 @@
   gap: var(--gap);
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ── Sub-header ── */
@@ -31,14 +32,17 @@
 }
 
 /* ── VU Meters L/R (compactos a la izquierda) ── */
+.console-vu-wrap { display: flex; gap: 6px; justify-content: center; padding: 6px; }
 #console-meter-lr {
   display: flex;
   flex-direction: row;
   gap: 6px;
   align-items: flex-start;
   padding: 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   flex-shrink: 0;
   width: 60px;
@@ -69,15 +73,19 @@
   transition: height .08s;
 }
 #console-meter-lr span { font-size: 9px; color: var(--text-muted); text-align: center; }
+.vu-channel span { font-size: 0.6rem; text-align: center; color: var(--text-muted); padding: 0.1rem 0; background: var(--surface); }
 
 /* ── Spectrum Analyzer ── */
 #spectrum-wrap {
   flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 8px;
   min-width: 0;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
 }
 #spectrum-canvas {
   width: 100%;
@@ -94,8 +102,10 @@
 
 /* ── Row: Waveform ── */
 #waveform-wrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 8px;
   height: var(--waveform-h);
@@ -217,6 +227,7 @@
   background: var(--accent);
   border-radius: 1px;
   transition: left 0.1s linear;
+  box-shadow: 0 0 6px var(--glow-color);
 }
 
 /* ── LAIA Chat (fill remaining space) ── */
@@ -225,43 +236,14 @@
   display: flex;
   flex-direction: column;
   min-height: 120px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
 }
 
-/* ── GR Meters ── */
-#gr-meters {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-.gr-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 4px 6px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-.gr-label { font-size: 9px; color: var(--text-muted); text-align: center; }
-.gr-bar-wrap {
-  height: 6px;
-  background: var(--bg);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.gr-bar {
-  height: 100%;
-  width: 0%;
-  background: var(--accent);
-  border-radius: 3px;
-  transition: width .08s;
-}
-.gr-value { font-size: 8px; color: var(--text-muted); text-align: center; font-family: var(--mono); }
-
-#chat-messages {
+/* ── Studio GR Panel ── */
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -292,9 +274,11 @@
 /* ── Studio GR Panel ── */
 .studio-gr-panel {
   padding: 0.5rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-border);
   border-radius: 6px;
-  background: var(--surface);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
 }
 /* studio-gr-panel base — gr-bands and gr-band styles moved to shared.css */
 
@@ -379,18 +363,6 @@
 .pm-card strong { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 .pm-card .metric-value { font-size: 16px; font-weight: 700; font-family: var(--mono); }
 
-.ref-match-panel { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
-.ref-match-panel h3 { font-size: 12px; font-weight: 600; margin-bottom: 8px; color: var(--accent); }
-.ref-match-score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.ref-match-score-circle { display: flex; flex-direction: column; align-items: center; padding: 8px; border: 2px solid var(--accent); border-radius: 50%; width: 56px; height: 56px; justify-content: center; flex-shrink: 0; }
-.match-bar-row { margin-bottom: 8px; }
-.match-bar-label { font-size: 11px; margin-bottom: 2px; }
-.match-bar-track { height: 6px; background: var(--surface); border-radius: 3px; position: relative; overflow: visible; }
-.match-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
-.match-bar-marker { position: absolute; top: -2px; width: 3px; height: 10px; background: var(--accent2); border-radius: 1px; }
-.match-bar-values { font-size: 10px; font-family: var(--mono); margin-top: 2px; }
-.match-bar-values span { color: var(--text-muted); }
-
 /* ══════════════════════════════════════════════════════════════
    UI Elements (added for new HTML structure)
    ══════════════════════════════════════════════════════════════ */
@@ -443,8 +415,10 @@
   flex-direction: column;
   gap: 6px;
   padding: 6px 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   min-height: var(--meters-h);
   overflow-y: auto;
@@ -453,7 +427,7 @@
 .meter-item { display: flex; align-items: center; gap: 4px; font-size: 10px; }
 .meter-label { width: 50px; color: var(--text-muted); text-align: right; flex-shrink: 0; }
 .meter-bar-wrap { flex: 1; height: 4px; background: var(--bg); border-radius: 2px; overflow: hidden; }
-.meter-bar-fill { height: 100%; width: 0%; background: var(--accent); border-radius: 2px; transition: width .08s; }
+.meter-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width .08s; box-shadow: var(--meter-glow); }
 .meter-readout { width: 70px; font-family: var(--mono); font-size: 9px; color: var(--text-muted); text-align: right; flex-shrink: 0; }
 
 /* ── Frequency Bands ── */
@@ -484,8 +458,10 @@
   display: flex;
   gap: 8px;
   padding: 6px 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   flex-wrap: wrap;
   align-items: center;

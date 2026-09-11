@@ -2,20 +2,29 @@
 
 /* ── Studio Rack ── */
 .studio-rack { padding: 0 0.5rem; }
-.studio-plugin-card { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.4rem; overflow: hidden; }
-.studio-plugin-card.expanded { border-color: var(--accent); }
-.studio-plugin-header { width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; background: var(--surface1); border: none; color: var(--text); cursor: pointer; font-size: 0.75rem; }
+.studio-plugin-card {
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+  overflow: hidden;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: border-color .2s, box-shadow .2s;
+}
+.studio-plugin-card.expanded { border-color: var(--accent); box-shadow: 0 0 12px var(--glow-color); }
+.studio-plugin-header { width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; background: transparent; border: none; color: var(--text); cursor: pointer; font-size: 0.75rem; }
 .studio-plugin-header:hover { background: var(--surface2); }
-.studio-plugin-status { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.studio-plugin-status { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; box-shadow: 0 0 6px var(--green); }
 .studio-plugin-header-title { flex: 1; text-align: left; font-weight: 600; }
 .studio-plugin-header-meta { color: var(--text-muted); font-size: 0.65rem; font-family: var(--mono); }
 .studio-chevron { color: var(--text-muted); font-size: 0.6rem; }
-.studio-plugin-body { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; background: var(--surface); }
+.studio-plugin-body { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.3rem; background: transparent; }
 .studio-plugin-actions { display: flex; gap: 0.4rem; margin-top: 0.4rem; }
-.studio-action-btn { flex: 1; padding: 0.3rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface2); color: var(--text); cursor: pointer; font-size: 0.65rem; font-weight: 600; }
-.studio-action-btn:hover { background: var(--surface3); }
+.studio-action-btn { flex: 1; padding: 0.3rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface2); color: var(--text); cursor: pointer; font-size: 0.65rem; font-weight: 600; transition: all .15s; }
+.studio-action-btn:hover { background: var(--surface3); box-shadow: 0 0 6px var(--glow-color); }
 .studio-action-btn.danger { border-color: var(--red); color: var(--red); }
-.studio-action-btn.danger:hover { background: var(--red); color: #fff; }
+.studio-action-btn.danger:hover { background: var(--red); color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
 
 /* ── Studio Controls ── */
 .studio-control-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; padding: 0.15rem 0; }
@@ -40,10 +49,6 @@
 .studio-chain-name { color: var(--accent); font-weight: 700; }
 .studio-chain-arrow { color: var(--text-muted); margin-left: 0.1rem; }
 
-/* ── Console VU Meters ── */
-.console-vu-wrap { display: flex; gap: 0.6rem; justify-content: center; padding: 0.5rem; }
-.vu-channel span { font-size: 0.6rem; text-align: center; color: var(--text-muted); padding: 0.1rem 0; background: var(--surface); }
-
 /* ── Console Playback ── */
 .lg-status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); margin-left: 0.3rem; vertical-align: middle; }
 .lg-status-dot.active { background: var(--green); box-shadow: 0 0 4px var(--green); }
@@ -67,14 +72,6 @@
 .ref-band-item .val { width: 55px; font-family: var(--mono); font-size: 0.6rem; }
 .ref-band-item input[type="range"] { flex: 1; accent-color: var(--accent2, #06b6d4); height: 3px; }
 
-/* ── Match Panel ── */
-.ref-match-panel .section-title { font-size: 0.75rem; font-weight: 600; margin: 0.6rem 0 0.3rem; color: var(--text); }
-.ref-match-step { font-size: 0.7rem; margin: 0.25rem 0; padding: 0.2rem 0.4rem; background: var(--surface2); border-radius: 3px; }
-.ref-match-panel .issues { color: var(--red); font-size: 0.7rem; padding-left: 1rem; }
-.ref-match-panel .tips { color: var(--green); font-size: 0.7rem; padding-left: 1rem; }
-.ref-match-panel ul { margin: 0.3rem 0; }
-.ref-match-panel li { margin-bottom: 0.15rem; }
-
 /* ── AB Panel ── */
 .ab-wrap { padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
 .ab-wrap h3 { margin-bottom: 0.5rem; font-size: 0.85rem; }
@@ -95,7 +92,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   color: #fff;
   border: none;
   font-size: 20px;
@@ -103,10 +100,10 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(124, 92, 255, .4);
+  box-shadow: 0 4px 16px var(--glow-color);
   transition: transform .15s, box-shadow .15s;
 }
-.ai-fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(124, 92, 255, .5); }
+.ai-fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px var(--glow-color), 0 0 30px var(--glow-color); }
 
 .ai-panel {
   position: fixed;
@@ -117,12 +114,14 @@
   height: var(--ai-panel-h, 480px);
   min-width: 300px;
   min-height: 260px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 0 20px var(--glow-color);
   overflow: hidden;
 }
 .ai-panel.hidden { display: none; }
@@ -223,14 +222,16 @@
 .ai-suggestion-card-actions { display: flex; gap: 6px; }
 .ai-suggestion-apply-btn {
   padding: 3px 8px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   color: #fff;
   border: none;
   border-radius: 3px;
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
+  transition: box-shadow .15s;
 }
+.ai-suggestion-apply-btn:hover { box-shadow: 0 0 10px var(--glow-color); }
 .ai-suggestion-cancel-btn {
   padding: 3px 8px;
   background: var(--surface3);

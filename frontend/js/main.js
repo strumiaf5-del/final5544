@@ -48,14 +48,18 @@ state.subscribe('authenticated', (isAuth) => {
 bindOnce($('btn-logout'), 'click', () => auth.logout(), 'logout');
 
 // ── Theme ─────────────────────────────────────────────────────
-bindOnce($('theme-toggle'), 'click', () => {
-  const html = document.documentElement;
-  const current = html.getAttribute('data-theme');
-  const next = current === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  $('theme-toggle').textContent = next === 'dark' ? '☀' : '☾';
-  record('theme-toggle', next);
-}, 'theme-toggle');
+const themeSelect = $('theme-select');
+const savedTheme = localStorage.getItem('lgmdm-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+if (themeSelect) {
+  themeSelect.value = savedTheme;
+  themeSelect.addEventListener('change', () => {
+    const theme = themeSelect.value;
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('lgmdm-theme', theme);
+    record('theme-change', theme);
+  });
+}
 
 // ── File Upload ───────────────────────────────────────────────
 file.initFileUpload(document, {

@@ -324,7 +324,13 @@ function renderControls(key) {
   });
   const actions = document.createElement('div'); actions.className = 'studio-plugin-actions';
   const bypass = document.createElement('button'); bypass.type = 'button'; bypass.className = 'studio-action-btn'; bypass.textContent = 'BYPASS';
-  bypass.addEventListener('click', () => { setPluginBypass(key, true); render(); saveStorage(); });
+  bypass.addEventListener('click', () => {
+    const currentlyBypassed = plugin.stageBypass ? state.savedValues[key] != null :
+      plugin.bypassInput ? cachedEl(plugin.bypassInput)?.value === '1' :
+      plugin.virtualBypass ? state.savedValues[key] != null : false;
+    setPluginBypass(key, !currentlyBypassed);
+    render(); saveStorage();
+  });
   const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'studio-action-btn danger'; remove.textContent = 'REMOVE';
   remove.addEventListener('click', () => activate(key, false));
   actions.appendChild(bypass); actions.appendChild(remove); wrap.appendChild(actions);
@@ -415,12 +421,12 @@ export function updateCentralGR(metrics) {
 
 export function install() {
   if (state.mounted) return;
-  loadStorage();
-  if (!localStorage.getItem(STORAGE_KEY)) {
-    syncPluginBypass('compressor', true);
-    syncPluginBypass('limiter', true);
-    saveStorage();
-  }
+  localStorage.removeItem(STORAGE_KEY);
+  state.active = new Set(['input', 'compressor', 'limiter']);
+  state.savedValues = {};
+  syncPluginBypass('compressor', true);
+  syncPluginBypass('limiter', true);
+  saveStorage();
   render();
   window.addEventListener('lgmdm:metrics', e => updateCentralGR(e.detail?.metrics));
   window.addEventListener('lgmdm:preview-telemetry', e => {

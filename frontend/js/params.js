@@ -11,10 +11,10 @@ const PARAM_DEFS = {
   comp_release_ms:   { id: 's-crelease',      type: 'number',  default: '100' },
   comp_makeup_db:    { id: 's-cmakeup',       type: 'number',  default: '0' },
   oversample_mode:   { id: 's-oversample',    type: 'value',   default: '2x' },
-  glue_bypass:       { id: 's-glue-bypass',   type: 'check',   default: false },
+  glue_bypass:       { id: 's-glue-bypass',   type: 'bool-value',   default: true },
   glue_threshold_db: { id: 's-glue-thresh',   type: 'number',  default: '-18' },
   glue_ratio:        { id: 's-glue-ratio',    type: 'number',  default: '2' },
-  clipper_bypass:    { id: 's-clip-bypass',   type: 'check',   default: false },
+  clipper_bypass:    { id: 's-clip-bypass',   type: 'bool-value',   default: true },
   clipper_ceiling:   { id: 's-clip-ceiling',  type: 'number',  default: '-0.3' },
   hp_cutoff:         { id: 's-hp',            type: 'number',  default: '20' },
   high_shelf_gain_db:{ id: 's-air',           type: 'number',  default: '0' },
@@ -76,6 +76,8 @@ export function collectParams(overrides = null) {
     }
     if (def.type === 'check') {
       params[key] = el.checked;
+    } else if (def.type === 'bool-value') {
+      params[key] = el.value === '1' || el.value === 'true';
     } else {
       params[key] = el.value;
     }
@@ -99,6 +101,8 @@ export function applyOverridesToUI(overrides) {
     if (!el) continue;
     if (def.type === 'check') {
       el.checked = !!value;
+    } else if (def.type === 'bool-value') {
+      el.value = value ? '1' : '0';
     } else {
       el.value = value;
     }

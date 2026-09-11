@@ -2,6 +2,7 @@
 import { apiFetch, apiBase } from './api.js';
 import { collectParams } from './params.js';
 import * as state from './state.js';
+import { getChainOverrides } from './master-console.js';
 
 const DEBOUNCE_MS = 1500;
 const DEFAULT_DURATION = 25;
@@ -22,6 +23,10 @@ let wired = false;
 // GR live curves
 let liveCurves = null;
 let liveRafId = null;
+
+// Cached top-level metrics + spectrum from fetchAndPublishMeters
+let cachedTopMetrics = null;
+let cachedSpectrum = null;
 
 function emit(name, detail) {
   window.dispatchEvent(new CustomEvent(`lgmdm:${name}`, { detail }));
@@ -130,7 +135,7 @@ async function createOriginalSnapshot() {
 
 async function renderPreview() {
   if (!previewSourceId) throw new Error('Sin snapshot');
-  const params = collectParams();
+  const params = { ...collectParams(), ...getChainOverrides() };
   setState('processing', 'Renderizando preview…', 0);
   const res = await apiFetch(`${apiBase()}/preview`, {
     method: 'POST',
@@ -167,6 +172,15 @@ async function fetchAndPublishMeters(sourceId) {
       mb_meters: cm?.mb || {},
       spectrum: cm?.spectrum || null,
     });
+    cachedTopMetrics = {
+      peak_db: cm?.post_limiter?.peak_db,
+      rms_db: cm?.post_limiter?.rms_db,
+      lufs_momentary: cm?.post_limiter?.lufs,
+      true_peak_db: cm?.post_limiter?.peak_db,
+      stereo_correlation: cm?.post_limiter?.stereo_correlation,
+      mono_compatibility_db: null,
+    };
+    cachedSpectrum = cm?.spectrum || null;
     liveCurves = {
       comp: cm?.comp?.curve || [], compHopMs: cm?.comp?.curve_hop_ms || 0,
       glue: cm?.glue?.curve || [], glueHopMs: cm?.glue?.curve_hop_ms || 0,
@@ -186,6 +200,8 @@ function liveGRTick(audio) {
   if (liveCurves) {
     const t = audio.currentTime;
     dispatchMetrics({
+      ...cachedTopMetrics,
+      spectrum: cachedSpectrum,
       comp_meters: { gr_db: curveValueAt(liveCurves.comp, liveCurves.compHopMs, t) },
       glue_meters: { gr_db: curveValueAt(liveCurves.glue, liveCurves.glueHopMs, t) },
       mb_meters: {
