@@ -219,6 +219,10 @@
             <input type="checkbox" id="s-livepreview">
             <span>Preview en vivo</span>
           </label>
+          <div id="previewRenderStatus" class="preview-render-status" aria-live="polite" hidden>
+            <div class="preview-render-label"><span id="previewRenderText">Preview inactivo</span><strong id="previewRenderPercent">0%</strong></div>
+            <div class="preview-render-track" role="progressbar" aria-label="Progreso de render del preview" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="previewRenderFill" class="preview-render-fill"></div></div>
+          </div>
           <div class="playback-inline">
             <button id="previewPlayBtn" disabled>▶</button>
             <button id="previewStopBtn" disabled>■</button>

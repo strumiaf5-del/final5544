@@ -27,6 +27,8 @@ let liveRafId = null;
 // Cached top-level metrics + spectrum from fetchAndPublishMeters
 let cachedTopMetrics = null;
 let cachedSpectrum = null;
+let progressTimer = null;
+let previewProgress = 0;
 
 function emit(name, detail) {
   window.dispatchEvent(new CustomEvent(`lgmdm:${name}`, { detail }));
@@ -37,7 +39,40 @@ function dispatchMetrics(metrics) {
 }
 
 function setState(s, text, progress = null) {
+  updateRenderStatus(s, text, progress);
   emit('preview-state', { state: s, text, progress });
+}
+
+function updateRenderStatus(state, text, progress = null) {
+  const status = document.getElementById('previewRenderStatus');
+  const label = document.getElementById('previewRenderText');
+  const percent = document.getElementById('previewRenderPercent');
+  const track = status?.querySelector('[role="progressbar"]');
+  const fill = document.getElementById('previewRenderFill');
+  if (!status || !label || !percent || !track || !fill) return;
+
+  const inactive = state === 'disabled' || state === 'waiting';
+  status.hidden = inactive;
+  const value = Number.isFinite(Number(progress)) ? Math.max(0, Math.min(100, Number(progress))) : previewProgress;
+  previewProgress = value;
+  label.textContent = text;
+  percent.textContent = `${Math.round(value)}%`;
+  fill.style.width = `${value}%`;
+  track.setAttribute('aria-valuenow', String(Math.round(value)));
+}
+
+function stopRenderProgress() {
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = null;
+}
+
+function startRenderProgress(initial = 8) {
+  stopRenderProgress();
+  previewProgress = initial;
+  progressTimer = setInterval(() => {
+    previewProgress = Math.min(92, previewProgress + Math.max(1, (92 - previewProgress) * 0.12));
+    updateRenderStatus('processing', 'Renderizando preview…', previewProgress);
+  }, 600);
 }
 
 function isEnabled() {
@@ -136,7 +171,8 @@ async function createOriginalSnapshot() {
 async function renderPreview() {
   if (!previewSourceId) throw new Error('Sin snapshot');
   const params = { ...collectParams(), ...getChainOverrides() };
-  setState('processing', 'Renderizando preview…', 0);
+  startRenderProgress(8);
+  setState('processing', 'Renderizando preview…', 8);
   const res = await apiFetch(`${apiBase()}/preview`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=UTF-8' },
@@ -145,6 +181,7 @@ async function renderPreview() {
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   renderAudio(await res.blob());
+  stopRenderProgress();
   setState('ready', `Preview de ${getDuration()} s listo`, 100);
   fetchAndPublishMeters(previewSourceId);
   return true;
@@ -223,6 +260,7 @@ function cancelRender() {
   renderSession = null;
   running = false;
   activePromise = null;
+  stopRenderProgress();
 }
 
 function scheduleRender() {
@@ -247,7 +285,7 @@ export async function start() {
   setState('processing', `Procesando Preview de ${getDuration()} s…`, 0);
 
   activePromise = renderPreview()
-    .catch(err => { if (!current.cancelled) { clearPreviewAudio(); setState('error', `Error: ${err.message}`); } return false; })
+    .catch(err => { if (!current.cancelled) { clearPreviewAudio(); stopRenderProgress(); setState('error', `Error: ${err.message}`, 0); } return false; })
     .finally(() => { if (renderSession === current) { renderSession = null; running = false; activePromise = null; } });
   return activePromise;
 }
@@ -255,7 +293,8 @@ export async function start() {
 export function stop() {
   clearTimeout(requestTimer); requestTimer = null;
   cancelRender(); clearPreviewAudio();
-  setState('disabled', 'Preview detenido');
+  previewProgress = 0;
+  setState('disabled', 'Preview detenido', 0);
 }
 
 export { scheduleRender as request, isEnabled, clearSourceSnapshot as reset };

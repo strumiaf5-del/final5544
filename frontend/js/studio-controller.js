@@ -12,7 +12,6 @@ const PLUGINS = {
   },
   eq: {
     family: 'EQ', label: 'Parametric EQ', short: 'EQ',
-    virtualBypass: { inputs: ['s-eq1gain', 's-eq2gain', 's-eq3gain', 's-eq4gain', 's-eq5gain', 's-eq6gain', 's-air', 's-lowshelf'], inactiveValue: 0 },
     controls: [
       { key: 'eq1_freq', label: 'Band 1 Freq', type: 'range', min: 20, max: 20000, step: 1, input: 's-eq1freq', suffix: ' Hz' },
       { key: 'eq1_gain', label: 'Band 1 Gain', type: 'range', min: -18, max: 18, step: 0.1, input: 's-eq1gain', suffix: ' dB' },
@@ -71,7 +70,7 @@ const PLUGINS = {
   },
   transient: {
     family: 'DYNAMICS', label: 'Transient Shaper', short: 'TRANSIENT',
-    virtualBypass: { inputs: ['s-tatt', 's-tsus'], inactiveValue: 0 }, controls: [
+    controls: [
       { key: 'transient_attack', label: 'Attack', input: 's-tatt', suffix: ' %', min: -100, max: 100, step: 1 },
       { key: 'transient_sustain', label: 'Sustain', input: 's-tsus', suffix: ' %', min: -100, max: 100, step: 1 }
     ]
@@ -99,7 +98,7 @@ const PLUGINS = {
     family: 'COLOR', label: 'Saturation', short: 'SAT', controls: [
       { key: 'saturation_drive', label: 'Drive', input: 's-satdrive', suffix: ' dB', min: 0, max: 24, step: 0.1 },
       { key: 'saturation_mix', label: 'Mix', input: 's-satmix', suffix: ' %', min: 0, max: 1, step: 0.01, displayScale: 100 }
-    ], virtualBypass: { input: 's-satdrive', inactiveValue: 0 }
+    ]
   },
   stereo: {
     family: 'STEREO', label: 'Stereo Width', short: 'STEREO', controls: [
@@ -131,8 +130,9 @@ const FAMILY_ORDER = ['INPUT', 'EQ', 'DYNAMICS', 'COLOR', 'STEREO', 'OUTPUT'];
 const BAND_ORDER = ['low', 'mid', 'high'];
 
 const state = {
-  active: new Set(['input', 'compressor', 'limiter']),
-  expanded: 'compressor',
+  active: new Set(['input']),
+  bypassed: new Set(),
+  expanded: 'input',
   multibandBand: 'mid',
   savedValues: {},
   mounted: false
@@ -191,14 +191,14 @@ export function isActive(key) {
 export function isStageBypassed(stage) {
   const plugin = Object.entries(PLUGINS).find(([, p]) => p.stageBypass === stage)?.[0];
   if (!plugin) return false;
-  return state.savedValues[plugin] != null;
+  return state.bypassed.has(plugin) || !state.active.has(plugin);
 }
 
 export function getBypassState() {
   const result = {};
   for (const [key, plugin] of Object.entries(PLUGINS)) {
     if (plugin.stageBypass) {
-      result[plugin.stageBypass] = state.savedValues[key] != null;
+      result[plugin.stageBypass] = state.bypassed.has(key) || !state.active.has(key);
     }
   }
   return result;
@@ -207,44 +207,9 @@ export function getBypassState() {
 export function setPluginBypass(key, bypassed) {
   const plugin = PLUGINS[key];
   if (!plugin) return;
-  if (plugin.stageBypass) {
-    const inputs = { comp: ['s-thresh', 's-ratio'], stereo: ['s-width'], limiter: ['s-ceiling'] }[plugin.stageBypass] || [];
-    inputs.forEach(id => {
-      const el = cachedEl(id);
-      if (!el) return;
-      if (bypassed) {
-        if (el.dataset.consoleSaved == null) el.dataset.consoleSaved = el.value;
-        if (plugin.stageBypass === 'comp') el.value = id === 's-ratio' ? '1' : '0';
-        if (plugin.stageBypass === 'stereo') el.value = '1';
-        if (plugin.stageBypass === 'limiter') el.value = '0.999';
-      } else if (el.dataset.consoleSaved != null) {
-        el.value = el.dataset.consoleSaved;
-      }
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-    if (bypassed) { state.savedValues[key] = state.savedValues[key] || '__bypassed__'; }
-    else { delete state.savedValues[key]; }
-    return;
-  }
-  if (plugin.bypassInput) {
-    set(plugin.bypassInput, bypassed ? 1 : 0);
-    return;
-  }
-  if (plugin.virtualBypass) {
-    const inputs = Array.isArray(plugin.virtualBypass.inputs) ? plugin.virtualBypass.inputs : [plugin.virtualBypass.input];
-    if (bypassed) {
-      state.savedValues[key] = state.savedValues[key] || {};
-      inputs.forEach(id => {
-        state.savedValues[key][id] = read(id);
-        set(id, plugin.virtualBypass.inactiveValue);
-      });
-    } else {
-      inputs.forEach(id => {
-        const restored = state.savedValues?.[key]?.[id];
-        if (restored != null) set(id, restored);
-      });
-    }
-  }
+  if (bypassed) state.bypassed.add(key); else state.bypassed.delete(key);
+  saveStorage();
+  window.dispatchEvent(new CustomEvent('lgmdm:param-change'));
 }
 
 export function syncPluginBypass(key, enabled) {
@@ -255,14 +220,20 @@ export function activate(key, enabled) {
   const plugin = PLUGINS[key];
   if (!plugin) return;
   if (plugin.pinned && !enabled) return;
-  if (enabled) state.active.add(key); else state.active.delete(key);
-  syncPluginBypass(key, enabled);
+  if (enabled) {
+    state.active.add(key);
+    state.bypassed.delete(key);
+  } else {
+    state.active.delete(key);
+    state.bypassed.add(key);
+  }
   state.expanded = enabled ? key : (state.expanded === key ? null : state.expanded);
   render();
   saveStorage();
   window.dispatchEvent(new CustomEvent('lgmdm:studio-chain-changed', {
     detail: { active: [...state.active], plugin: key, enabled }
   }));
+  window.dispatchEvent(new CustomEvent('lgmdm:param-change'));
 }
 
 const FAMILY_COLORS = { INPUT: 'var(--text-muted)', EQ: 'var(--accent2, #06b6d4)', DYNAMICS: 'var(--yellow, #eab308)', COLOR: 'var(--red, #ef4444)', STEREO: '#a78bfa', OUTPUT: 'var(--green, #22c55e)' };
@@ -325,9 +296,7 @@ function renderControls(key) {
   const actions = document.createElement('div'); actions.className = 'studio-plugin-actions';
   const bypass = document.createElement('button'); bypass.type = 'button'; bypass.className = 'studio-action-btn'; bypass.textContent = 'BYPASS';
   bypass.addEventListener('click', () => {
-    const currentlyBypassed = plugin.stageBypass ? state.savedValues[key] != null :
-      plugin.bypassInput ? cachedEl(plugin.bypassInput)?.value === '1' :
-      plugin.virtualBypass ? state.savedValues[key] != null : false;
+    const currentlyBypassed = state.bypassed.has(key);
     setPluginBypass(key, !currentlyBypassed);
     render(); saveStorage();
   });
@@ -422,10 +391,10 @@ export function updateCentralGR(metrics) {
 export function install() {
   if (state.mounted) return;
   localStorage.removeItem(STORAGE_KEY);
-  state.active = new Set(['input', 'compressor', 'limiter']);
+  state.active = new Set(['input']);
+  state.bypassed = new Set(Object.keys(PLUGINS).filter(key => key !== 'input'));
+  state.expanded = 'input';
   state.savedValues = {};
-  syncPluginBypass('compressor', true);
-  syncPluginBypass('limiter', true);
   saveStorage();
   render();
   window.addEventListener('lgmdm:metrics', e => updateCentralGR(e.detail?.metrics));
@@ -447,4 +416,5 @@ export function install() {
 }
 
 export function getActiveChain() { return [...state.active]; }
+export function getBypassedPlugins() { return Object.keys(PLUGINS).filter(key => !state.active.has(key) || state.bypassed.has(key)); }
 export function getPlugins() { return PLUGINS; }
